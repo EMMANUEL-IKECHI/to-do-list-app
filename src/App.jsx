@@ -14,6 +14,11 @@ const App = () => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
 
+  const handleReset = () => {
+    setTasks([]);
+    localStorage.clear();
+  }
+
   // Add a new task
   const addTasks = (task) => {
     if (!task.trim()) return;
@@ -53,6 +58,9 @@ const App = () => {
             toggleComplete={toggleComplete}
           />
         )}
+
+        {tasks.length === 0 ? '' : <button onClick={handleReset} className='bg-red-400 text-white h-fit m-4 px-4 py-2 hover:cursor-pointer hover:bg-blue-500 transition-all active:scale-90 '
+>Reset</button>} 
       </section>
     </div>
   );
