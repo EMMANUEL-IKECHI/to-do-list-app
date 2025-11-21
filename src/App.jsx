@@ -1,13 +1,68 @@
-import React, { useEffect, useState } from 'react'
-import './App.css'
-import TodoInput from './components/TodoInput'
-import TodoList from './components/TodoList'
+import React, { useEffect, useReducer} from "react";
+import "./App.css";
+import TodoInput from "./components/TodoInput";
+import TodoList from "./components/TodoList";
+
+export const ACTION = {
+  ADD_TASK: 'add-task',
+  REMOVE_TASK: 'remove-task',
+  TOGGLE_TASK: 'toggle-task',
+  RESET: 'reset'
+}
+
+function newTask(task) {
+  return {
+    id: Date.now(),
+    taskText: task,
+    completed: false
+  }
+}
+
+const reducer = (tasks, action) => {
+  switch (action.type) {
+    case ACTION.ADD_TASK:
+      return [...tasks, newTask(action.payload)]
+
+    case ACTION.REMOVE_TASK:
+      return tasks.filter((task) => (
+        task.id !== action.id
+      ))
+
+      case ACTION.TOGGLE_TASK:
+        return tasks.map(task => {
+          if (task.id === action.id) {
+            return {...task, completed: !task.completed}
+          } else return task
+        })
+
+      case ACTION.RESET:
+        return []
+
+      default:
+        return tasks
+  }
+}
 
 const App = () => {
-  const [tasks, setTasks] = useState(() => {
+
+  const [tasks, dispatch] = useReducer(
+  reducer,
+  [],
+  () => {
     const savedTasks = localStorage.getItem("tasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
+    if (!savedTasks || savedTasks == "undefined") {
+      return [];
+    }
+    try {
+      return JSON.parse(savedTasks)
+    } catch (e) {
+      console.log(`Error: ${e}`)
+      return []
+    }
+    // return savedTasks ? JSON.parse(savedTasks) : [];
+  }
+);
+
 
   // Save tasks to localStorage whenever they change
   useEffect(() => {
@@ -15,32 +70,24 @@ const App = () => {
   }, [tasks]);
 
   const handleReset = () => {
-    setTasks([]);
+    dispatch({type: ACTION.RESET})
     localStorage.clear();
-  }
+  };
 
   // Add a new task
   const addTasks = (task) => {
     if (!task.trim()) return;
-    const newTask = {
-      id: Date.now(),
-      taskText: task,
-      completed: false,
-    };
-    setTasks([...tasks, newTask]);
+    dispatch({type: ACTION.ADD_TASK, payload: task})
   };
 
   // Remove a task
   const removeTask = (id) => {
-    const newTasks = tasks.filter(task => task.id !== id);
-    setTasks(newTasks);
+    dispatch({type: ACTION.REMOVE_TASK, id: id});
   };
 
   // Toggle task completion
   const toggleComplete = (id) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    dispatch({type:ACTION.TOGGLE_TASK, id: id})
   };
 
   return (
@@ -59,8 +106,16 @@ const App = () => {
           />
         )}
 
-        {tasks.length === 0 ? '' : <button onClick={handleReset} className='bg-red-400 text-white h-fit m-4 px-4 py-2 hover:cursor-pointer hover:bg-blue-500 transition-all active:scale-90 '
->Reset</button>} 
+        {tasks.length === 0 ? (
+          ""
+        ) : (
+          <button
+            onClick={handleReset}
+            className="bg-red-400 text-white h-fit m-4 px-4 py-2 hover:cursor-pointer hover:bg-blue-500 transition-all active:scale-90 "
+          >
+            Reset
+          </button>
+        )}
       </section>
     </div>
   );
